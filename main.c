@@ -2,15 +2,35 @@
 #include <unistd.h>
 #include <string.h>
 
+#define MAX_LENGTH 256
 
 char* get_xor(char*,char*);
+void tr_read();
 
 int main()
 {
-	char *x = get_xor("Testo di prova ","df546tgfg435trf");
-
-	printf("%s\n",x);
+	//char *x = get_xor("Testo di prova ","df546tgfg435trf");
+	//printf("%s\n",x);
+	tr_read();
 	return 0;
+}
+void tr_read()
+{
+	char text[MAX_LENGTH];
+    int i = 0;
+	do
+	{
+		char c =getchar();
+		if(c != '\n')
+		{
+			text[i % MAX_LENGTH] = c;
+			i++;
+		}
+		else
+			printf("%s\n", text);
+
+	}
+	while(strstr(text,"quit") == NULL);
 }
 char* get_xor(char *r,char *s)
 {
