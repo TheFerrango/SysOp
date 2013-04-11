@@ -16,7 +16,7 @@ int main()
 }
 void tr_read()
 {
-	char text[MAX_LENGTH];
+	char text[MAX_LENGTH] = "\0";
     int i = 0;
 	do
 	{
