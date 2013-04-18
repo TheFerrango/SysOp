@@ -9,7 +9,7 @@
 
 char* get_xor(char*,char*);
 void* tr_read();
-void read_random(char *s);
+void read_random(char *,int);
 
 
 char text[MAX_LENGTH] = "\0";
@@ -28,8 +28,8 @@ int main()
     }
 
     //tr = pthread_create(&tr,NULL,tr_read,NULL);
-    char t[2];
-    read_random(t);
+    char t[200];
+    read_random(&t,200);
     printf("%s\n", t);
 	pthread_mutex_destroy(&lock);
 	return 0;
@@ -66,10 +66,10 @@ char* get_xor(char *r,char *s)
 
 	return value;
 }
-void read_random(char *s)
+void read_random(char *s,int s_len)
 {
-	char *tmp = (char*)malloc(strlen(s) * sizeof(char));
-	int n_bytes = strlen(s),n_read = 0;
+	char *tmp = (char*)malloc(s_len * sizeof(char));
+	int n_bytes = s_len,n_read = 0;
 
 	int random_fd = open("/dev/random",O_RDONLY);
 
@@ -81,11 +81,13 @@ void read_random(char *s)
 
 	while(n_read < n_bytes)
 	{
-		n_read += read(random_fd,tmp,n_bytes);
-		printf("i read %i bytes\n",n_read);
-	}
+		read(random_fd,tmp,n_bytes);
+		n_read = strlen(tmp);
+		printf("char readed: %i\n",n_read);
 
+	}
 	close(random_fd);
+	printf("strlen : %i\n",strlen(tmp));
 	strcpy(s,tmp);
 	free(tmp);
 }
