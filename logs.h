@@ -1,0 +1,1 @@
+void logGen(char *, char *)
