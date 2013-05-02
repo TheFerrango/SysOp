@@ -24,6 +24,6 @@ void logTw(char * logMsg)
 void logGen(char * whichLog, char * logMsg)
 {
     openlog(whichLog, 0, LOG_LOCAL0);
-    syslog(LOG_INFO, logMsg);
+    syslog(LOG_INFO, "%s", logMsg);
     closelog();
 }
