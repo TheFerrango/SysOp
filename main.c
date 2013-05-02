@@ -82,15 +82,15 @@ void read_random(char *s,int s_len)
 	printf("Reading from /dev/random... This may take a while!\n");
 	while(n_read < n_bytes)
 	{
-		read(random_fd,tmp,n_bytes);
-		n_read = strlen(tmp);
+		read(random_fd,tmp,n_bytes - n_read);
+		n_read += strlen(tmp);
 		strcat(s,tmp);
 		printf("char readed: %i\n",n_read);
 		printf("...\n");
 
 	}
 	close(random_fd);
-	printf("strlen : %i\n",strlen(tmp));
+	printf("strlen : %i\n",strlen(s));
 	strcpy(s,tmp);
 	free(tmp);
 }
