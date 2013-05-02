@@ -4,6 +4,7 @@
 #include <syslog.h>
 #include <pthread.h>
 #include <fcntl.h>
+#include "logs.h"
 
 #define MAX_LENGTH 256
 
@@ -65,6 +66,18 @@ char* get_xor(char *r,char *s)
 		value[i] = s[i] ^ r[i];
 
 	return value;
+}
+void* te_function()
+{
+	pthread_mutex_lock(&lock);
+	char* r = (char*)malloc(strlen(text) * sizeof(char));
+	char* xor_result;
+
+	read_random(r,strlen(r));
+	xor_result = get_xor(r,text);
+
+	pthread_mutex_unlock(&lock);
+
 }
 void read_random(char *s,int s_len)
 {
