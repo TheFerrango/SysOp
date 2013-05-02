@@ -1,1 +1,1 @@
-void logGen(char *, char *)
+void logGen(char * threadName, char * logMessage);
