@@ -16,7 +16,7 @@ void* te_function();
 void* td_function();
 
 
-queue input_queue;
+queue *input_queue;
 char text[MAX_LENGTH] = "\0";
 char* r,se,sd;
 
@@ -25,19 +25,23 @@ int main()
 	//char *x = get_xor("Testo di prova ","df546tgfg435trf");
 	//printf("%s\n",x);
 	pthread_t tw,tr,td,te;
-
-    /**tr = pthread_create(&tr,NULL,tr_read,NULL);
-    te = pthread_create(&te,NULL,te_function,NULL);
+    //tr = pthread_create(&tr,NULL,tr_read,NULL);
+    /**te = pthread_create(&te,NULL,te_function,NULL);
     td = pthread_create(&td,NULL,td_function,NULL);
     tw = pthread_create(&tw,NULL,tw_function,NULL);**/
 
-
-    printf("%s\n",strlen(text));
-    char t[200];
-    read_random(&t,200);
-    printf("%s\n", t);
+    //printf("text len:%s\n",strlen(text));
+    //char t[200];
+    //read_random(&t,200);
+    //printf("%s\n", t);
     
     //pthread_join(&tr,NULL);
+    input_queue = malloc(sizeof(queue));
+    init(input_queue);
+    enqueue("hallo prime minister",input_queue);
+    enqueue("by prime minister",input_queue);
+    enqueue("hallo prime minister",input_queue);
+    print_queue(&input_queue);
 	return 0;
 }
 

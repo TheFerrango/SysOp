@@ -6,24 +6,22 @@
 #include <stdlib.h>
 
 
-typedef node;
-struct node 
+typedef struct node
 {
   char val[MAX_LENGTH];
-  node* next;
-};
-typedef node* queue;
-struct queue 
+  struct node* next;
+}node;
+
+typedef struct  queue
 {
-  node * tail;
-  node * head;
-};
+  struct node * tail;
+  struct node * head;
+}queue;
 
 void init(queue *);
 int enqueue(const char *,queue *);
 int dequeue(char *,queue *);
-void print (const queue);
-
+void print_queue(const queue*);
 
 
 #endif
