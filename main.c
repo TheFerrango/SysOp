@@ -25,7 +25,9 @@ int main()
 	//char *x = get_xor("Testo di prova ","df546tgfg435trf");
 	//printf("%s\n",x);
 	pthread_t tw,tr,td,te;
-    //tr = pthread_create(&tr,NULL,tr_read,NULL);
+	input_queue = malloc(sizeof(queue));
+
+    tr = pthread_create(&tr,NULL,tr_read,NULL);
     /**te = pthread_create(&te,NULL,te_function,NULL);
     td = pthread_create(&td,NULL,td_function,NULL);
     tw = pthread_create(&tw,NULL,tw_function,NULL);**/
@@ -35,20 +37,16 @@ int main()
     //read_random(&t,200);
     //printf("%s\n", t);
     
-    //pthread_join(&tr,NULL);
-    input_queue = malloc(sizeof(queue));
-    init(input_queue);
-    enqueue("hallo prime minister",input_queue);
-    enqueue("by prime minister",input_queue);
-    enqueue("hallo prime minister",input_queue);
-    print_queue(&input_queue);
+    pthread_join(&tr,NULL);
+    
+    print_queue(input_queue);
 	return 0;
 }
 
 
 void *tr_read()
 {
-	init(&input_queue);
+	init(input_queue);
     int i = 0;
 	do
 	{
@@ -62,7 +60,7 @@ void *tr_read()
 		else
 		{
 			printf("%s\n", text);
-			enqueue(text,&input_queue);
+			enqueue(text,input_queue);
 		}
 	}
 	while(strstr(text,"quit") == NULL);

@@ -24,13 +24,11 @@ int enqueue(const char *string,queue *q)
   strncpy(np->val,string,sizeof(np->val));
   np->next=NULL;
 
-  if (emptyp(&q)) 
+  if (emptyp(q)) 
     q->head=q->tail=np;
   else 
   {
     q->tail->next = np;
-    //memcpy(q->tail->next,&np,sizeof(node));
-    //memcpy(q->tail,&np,sizeof(node));
     q->tail=np;
   }
   return 1;
@@ -39,7 +37,7 @@ int enqueue(const char *string,queue *q)
 int dequeue(char *s,queue *q)
 { 
   node * first;
-  if (emptyp(&q))
+  if (emptyp(q))
     return 0;
   first = q->head;
   strncpy(s,first->val,sizeof(s));
