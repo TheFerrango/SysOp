@@ -2,9 +2,9 @@
 
 
 
-static int emptyp (const queue Q) 
+static int emptyp (const queue *q) 
 {
-  return Q.head == NULL?1:0;
+  return q->head == NULL?1:0;
 }
 
 void init(queue *q)
@@ -18,11 +18,11 @@ int enqueue(const char *string,queue *q)
   if (np==NULL)
     return 0;
 
-  strncpy(np->val,string,sizeof(np-val));
+  strncpy(np->val,string,sizeof(np->val));
   np->next=NULL;
 
   if (emptyp(&q)) 
-    q->head=q.tail=np;
+    q->head=q->tail=np;
   else 
   {
     q->tail->next=np;
@@ -45,7 +45,7 @@ int dequeue(char *s,queue *q)
 
 void print(const queue *q) 
 { 
-  if (!emptyp()) 
+  if (!emptyp(&q)) 
   {
     node * first=q->head;
     do 

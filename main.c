@@ -58,7 +58,7 @@ void *tr_read()
 		else
 		{
 			printf("%s\n", text);
-			enqueue(text,input_queue);
+			enqueue(text,&input_queue);
 		}
 	}
 	while(strstr(text,"quit") == NULL);
@@ -95,7 +95,7 @@ void* te_function()
 		se = get_xor(r,text);
 		printf("Se: %s\n",se);
 	}
-	while(dequeue(input,input_queue));
+	while(dequeue(input,&input_queue));
 	
 
 }
