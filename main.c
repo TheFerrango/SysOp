@@ -5,16 +5,20 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include "logs.h"
+#include "queue.h"
 
-#define MAX_LENGTH 256
 
 char* get_xor(char*,char*);
 void* tr_read();
 void read_random(char *,int);
+void* tw_function();
+void* te_function();
+void* td_function();
 
 
+queue input_queue;
 char text[MAX_LENGTH] = "\0";
-pthread_mutex_t lock;
+char* r,se,sd;
 
 int main()
 {
@@ -22,26 +26,28 @@ int main()
 	//printf("%s\n",x);
 	pthread_t tw,tr,td,te;
 
-    if (pthread_mutex_init(&lock, NULL) != 0)
-    {
-        printf("\n mutex init failed\n");
-        return 1;
-    }
+    /**tr = pthread_create(&tr,NULL,tr_read,NULL);
+    te = pthread_create(&te,NULL,te_function,NULL);
+    td = pthread_create(&td,NULL,td_function,NULL);
+    tw = pthread_create(&tw,NULL,tw_function,NULL);**/
 
-    //tr = pthread_create(&tr,NULL,tr_read,NULL);
+
+    printf("%s\n",strlen(text));
     char t[200];
     read_random(&t,200);
     printf("%s\n", t);
-	pthread_mutex_destroy(&lock);
+    
+    //pthread_join(&tr,NULL);
 	return 0;
 }
+
+
 void *tr_read()
 {
-	
+	init(&input_queue);
     int i = 0;
 	do
 	{
-		pthread_mutex_lock(&lock);
 		char c =getchar();
 
 		if(c != '\n')
@@ -52,7 +58,7 @@ void *tr_read()
 		else
 		{
 			printf("%s\n", text);
-			pthread_mutex_unlock(&lock);
+			enqueue(text,input_queue);
 		}
 	}
 	while(strstr(text,"quit") == NULL);
@@ -67,21 +73,36 @@ char* get_xor(char *r,char *s)
 
 	return value;
 }
+void* tw_function()
+{
+	printf("Sd: %s\n", sd);
+	free(sd);
+}
+void* td_function()
+{
+	sd = get_xor(r,se);
+	free(r);
+	free(se);	
+}
 void* te_function()
 {
-	pthread_mutex_lock(&lock);
-	char* r = (char*)malloc(strlen(text) * sizeof(char));
-	char* xor_result;
-
-	read_random(r,strlen(r));
-	xor_result = get_xor(r,text);
-
-	pthread_mutex_unlock(&lock);
+	char input[MAX_LENGTH];
+	do
+	{
+		r = (char*)malloc(strlen(input) * sizeof(char));
+		read_random(r,strlen(r));
+		printf("R: %s\n",r);
+		se = get_xor(r,text);
+		printf("Se: %s\n",se);
+	}
+	while(dequeue(input,input_queue));
+	
 
 }
 void read_random(char *s,int s_len)
 {
-	char *tmp = (char*)malloc(s_len * sizeof(char));
+	//char *tmp = (char*)malloc(s_len * sizeof(char));
+	char tmp;
 	int n_bytes = s_len,n_read = 0;
 
 	int random_fd = open("/dev/random",O_RDONLY);
@@ -93,7 +114,8 @@ void read_random(char *s,int s_len)
 	}
 
 	printf("Reading from /dev/random... This may take a while!\n");
-	while(n_read < n_bytes)
+	//TODO provare a leggere un carattere alla volta
+	/**while(n_read < n_bytes)
 	{
 		read(random_fd,tmp,n_bytes);
 		n_read = strlen(tmp);
@@ -101,11 +123,14 @@ void read_random(char *s,int s_len)
 		printf("char readed: %i\n",n_read);
 		printf("...\n");
 
+	}**/
+	int i=0;
+	for(; i < s_len;i++)
+	{
+		read(random_fd,&tmp,sizeof(char));
+		s[i] = tmp;
 	}
 	close(random_fd);
-	printf("strlen : %i\n",strlen(tmp));
-	strcpy(s,tmp);
-	free(tmp);
 }
 
 
