@@ -32,9 +32,14 @@ int main()
 {
 	//char *x = get_xor("Testo di prova ","df546tgfg435trf");
 	//printf("%s\n",x);
+	
 	pthread_t tw,tr,td,te;
 	input_queue = malloc(sizeof(queue));
-    tr = pthread_create(&tr,NULL,tr_read,NULL);
+	
+	//il risultato della create NON VA ASSOCIATO
+	//A PTHREAD_T, Mirko blék
+    int tr_status = pthread_create(&tr,NULL,tr_read,NULL);
+    
     /**te = pthread_create(&te,NULL,te_function,NULL);
     td = pthread_create(&td,NULL,td_function,NULL);
     tw = pthread_create(&tw,NULL,tw_function,NULL);**/
@@ -43,9 +48,8 @@ int main()
     //char t[200];
     //read_random(&t,200);
     //printf("%s\n", t);
-    
     pthread_join(tr,NULL);
-    
+   
     print_queue(input_queue);
 	return 0;
 }
@@ -55,7 +59,6 @@ void *tr_read()
 {
 	init(input_queue);
     int i = 0;
-    
 
 	do
 	{
@@ -72,9 +75,8 @@ void *tr_read()
 		}
 	}
 	while(strstr(text,"quit") == NULL);
-
-	return NULL;
 }
+
 char* get_xor(char *r,char *s)
 {
 	char *value = (char* ) malloc(strlen(s) * sizeof(char));
@@ -96,6 +98,7 @@ void* td_function()
 	free(r);
 	free(se);	
 }
+
 void* te_function()
 {
 	char input[MAX_LENGTH];
@@ -111,6 +114,7 @@ void* te_function()
 	
 
 }
+
 void read_random(char *s,int s_len)
 {
 	//char *tmp = (char*)malloc(s_len * sizeof(char));
