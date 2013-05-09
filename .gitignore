@@ -18,4 +18,4 @@
 
 #Mac hidden files
 *.DS_Store
-.plist
+*.plist
