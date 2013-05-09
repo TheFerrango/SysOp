@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <syslog.h>
@@ -7,6 +8,13 @@
 #include "logs.h"
 #include "queue.h"
 
+/**
+	READ THIS BEFORE CONTINUE:
+	DO NOT EVER USE QUEUE WITH & IT DOESN'T SIMPLY WORK
+	AND YOU WILL NOT GET IT AND YOUR MIND WILL BLOWN TRYING TO
+	UNDERSTAND IT.
+
+**/
 
 char* get_xor(char*,char*);
 void* tr_read();
@@ -26,7 +34,6 @@ int main()
 	//printf("%s\n",x);
 	pthread_t tw,tr,td,te;
 	input_queue = malloc(sizeof(queue));
-
     tr = pthread_create(&tr,NULL,tr_read,NULL);
     /**te = pthread_create(&te,NULL,te_function,NULL);
     td = pthread_create(&td,NULL,td_function,NULL);
@@ -37,7 +44,7 @@ int main()
     //read_random(&t,200);
     //printf("%s\n", t);
     
-    pthread_join(&tr,NULL);
+    pthread_join(tr,NULL);
     
     print_queue(input_queue);
 	return 0;
@@ -48,10 +55,11 @@ void *tr_read()
 {
 	init(input_queue);
     int i = 0;
+    
+
 	do
 	{
-		char c =getchar();
-
+		char c=fgetc(stdin);
 		if(c != '\n')
 		{
 			text[i % MAX_LENGTH] = c;
@@ -64,6 +72,8 @@ void *tr_read()
 		}
 	}
 	while(strstr(text,"quit") == NULL);
+
+	return NULL;
 }
 char* get_xor(char *r,char *s)
 {
@@ -97,7 +107,7 @@ void* te_function()
 		se = get_xor(r,text);
 		printf("Se: %s\n",se);
 	}
-	while(dequeue(input,&input_queue));
+	while(dequeue(input,input_queue));
 	
 
 }

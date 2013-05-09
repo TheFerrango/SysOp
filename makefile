@@ -3,7 +3,7 @@ all: compile rules_rsys
 
 compile:
 		@echo "Compiling..."
-		gcc -w main.c logs.c
+		gcc -w main.c logs.c queue.c
 		
 rules_rsys:
 		@echo "Generating rules file for Rsyslog.."
