@@ -1,7 +1,6 @@
 #include "queue.h"
-#include "utils.h"
 
-static int emptyp (const queue *q) 
+static int emptyp (const queue *q)
 {
   return q->head == NULL?1:0;
 }
@@ -24,12 +23,12 @@ int enqueue(const char *string,queue *q)
 
   //TODO[Mirko] test strncpy limit cases
   strncpy(np->val,string,sizeof(np->val));
-  //safe_copy(string,np->val);
+  //safe_copy(np->val,string);
   np->next=NULL;
 
-  if (emptyp(q)) 
+  if (emptyp(q))
     q->head=q->tail=np;
-  else 
+  else
   {
     q->tail->next = np;
     q->tail=np;
@@ -38,25 +37,25 @@ int enqueue(const char *string,queue *q)
 }
 
 int dequeue(char *s,queue *q)
-{ 
+{
   node * first;
   if (emptyp(q))
     return 0;
   first = q->head;
-  
-  strncpy(s,first->val,sizeof(s));
 
+  strncpy(s,first->val,sizeof(s));
+  //safe_copy(s,first->val);
   q->head = (struct node*) q->head->next;
-  free(first); 
+  free(first);
   return 1;
 }
 
-void print_queue(const queue *q) 
-{ 
-  if (!emptyp(q)) 
+void print_queue(const queue *q)
+{
+  if (!emptyp(q))
   {
     node * first=q->head;
-    do 
+    do
     {
       printf("%s\n",first->val);
       first = first->next;

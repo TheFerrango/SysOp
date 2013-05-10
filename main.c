@@ -21,7 +21,9 @@ void* td_function();
 queue *input_queue;
 char text[MAX_LENGTH + 1] = "\0";
 char* r,se,sd;
-sem_t *sem;
+sem_t sem;
+
+custom_sem sem_first;
 
 int val;
 int main()
@@ -30,17 +32,14 @@ int main()
 	//printf("%s\n",x);
 	printf("Alert:\n");
 	printf("A string bigger than %i characters will overwrite itself!!!\n",MAX_LENGTH);
-	
-	pthread_t tr;
+
+	pthread_t tr,te;
 	input_queue = malloc(sizeof(queue));
-	//sem_init(&sem,0,0);
-	sem_unlink("tmp");
-	sem = sem_open("tmp",O_CREAT,0,0);
-	if(sem == SEM_FAILED)
-	{
-		printf("Error creating semaphore\n");//but why?
-		return 1;
-	}
+	//int sem_status = sem_init(&sem,0,1);
+
+	init_semaphore(&sem_first);
+
+
     int tr_status = pthread_create(&tr,NULL,tr_read,NULL);
     /**td = pthread_create(&td,NULL,td_function,NULL);
     tw = pthread_create(&tw,NULL,tw_function,NULL);**/
@@ -49,24 +48,29 @@ int main()
     //char t[200];
     //read_random(&t,200);
     //printf("%s\n", t);
-    sem_close(sem);
+    sem_destroy(&sem_first);
     pthread_join(tr,NULL);
-   
+
     print_queue(input_queue);
 	return 0;
 }
-
+void init_semaphore(custom_sem *sem)
+{
+	sem = malloc(sizeof(custom_sem));
+	sem_init(&sem->fillCount,0,0);
+	sem_init(&sem->emptyCount,0,BUFFER_SIZE);
+}
 
 void *tr_read()
 {
 	pthread_t te;
 	init(input_queue);
     int i = 0;
+    int te_status = pthread_create(&te,NULL,te_function,NULL);
+
+    //int status = sem_wait(&sem);
     printf("Tr started successfully...\n");
 
-    int status = sem_wait(sem);
-    perror("Error:  ");
-    int te_status = pthread_create(&te,NULL,te_function,NULL);
 
 	do
 	{
@@ -78,13 +82,18 @@ void *tr_read()
 		}
 		else
 		{
-			sem_post(sem);
+            if( i < MAX_LENGTH)
+                text[i % MAX_LENGTH] = '\0';
+			sem_wait(&sem_first.emptyCount);
+			printf("Releasing semaphore!\n");
 			printf("%s\n", text);
 			if(!enqueue(text,input_queue))
 				printf("Error while adding element to the queue!\n");
 
 			//Empty the string
-			sem_wait(sem);
+			sem_post(&sem_first.fillCount);
+			printf("Retaking semaphore!\n");
+
 			text[0]='\0';
 			i=0;
 
@@ -115,7 +124,7 @@ void* td_function()
 {
 	sd = get_xor(r,se);
 	free(r);
-	free(se);	
+	free(se);
 }
 
 void* te_function()
@@ -123,19 +132,21 @@ void* te_function()
 	char input[MAX_LENGTH + 1];
 	input[0] = '\0';
 	printf("Te thread started successfully!\n");
-	do
+	int queue_status = 1;
+	while(queue_status)
 	{
-		int status = sem_wait(sem);
-    	printf("%i\n",status );
-		r = (char*)malloc(strlen(text) * sizeof(char));
+		printf("Te trying to take semaphore\n");
+		int status = sem_wait(&sem_first.fillCount);
+		queue_status = dequeue(input,input_queue);
+		printf("Te takes semaphore\n");
+		r = (char*)malloc(strlen(input) * sizeof(char));
 		read_random(r,strlen(r));
 		printf("R: %s\n",r);
-		se = get_xor(r,text);
-		sem_post(sem);
+		se = get_xor(r,input);
+		sem_post(&sem_first.emptyCount);
 		printf("Se: %s\n",se);
 	}
-	while(dequeue(input,input_queue));
-	
+
 
 }
 
