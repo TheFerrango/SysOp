@@ -1,14 +1,15 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#define MAX_LENGTH 256
+
 #include <string.h>
 #include <stdlib.h>
+#include "utils.h"
 
 
 typedef struct node
 {
-  char val[MAX_LENGTH];
+  char val[MAX_LENGTH + 1];
   struct node* next;
 }node;
 
