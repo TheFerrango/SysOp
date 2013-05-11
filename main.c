@@ -23,7 +23,8 @@ char text[MAX_LENGTH + 1] = "\0";
 char* r,se,sd;
 sem_t sem;
 
-custom_sem sem_first;
+sem_t emptyCount,fillCount;
+pthread_mutex_t mutex;
 
 int val;
 int main()
@@ -35,9 +36,10 @@ int main()
 
 	pthread_t tr,te;
 	input_queue = malloc(sizeof(queue));
-	//int sem_status = sem_init(&sem,0,1);
+	pthread_mutex_init(&mutex,NULL);
 
-	init_semaphore(&sem_first);
+	sem_init(&fillCount,0,0);
+	sem_init(&emptyCount,0,BUFFER_SIZE);
 
 
     int tr_status = pthread_create(&tr,NULL,tr_read,NULL);
@@ -48,17 +50,16 @@ int main()
     //char t[200];
     //read_random(&t,200);
     //printf("%s\n", t);
-    sem_destroy(&sem_first);
+    sem_destroy(&fillCount);
+    sem_destroy(&emptyCount);
     pthread_join(tr,NULL);
 
     print_queue(input_queue);
 	return 0;
 }
-void init_semaphore(custom_sem *sem)
+void init_semaphore(custom_sem sem)
 {
-	sem = malloc(sizeof(custom_sem));
-	sem_init(&sem->fillCount,0,0);
-	sem_init(&sem->emptyCount,0,BUFFER_SIZE);
+	//Now this does nothing, maybe i'll use it in future
 }
 
 void *tr_read()
@@ -84,14 +85,17 @@ void *tr_read()
 		{
             if( i < MAX_LENGTH)
                 text[i % MAX_LENGTH] = '\0';
-			sem_wait(&sem_first.emptyCount);
+            
+
+			sem_wait(&emptyCount);
 			printf("Releasing semaphore!\n");
 			printf("%s\n", text);
+			pthread_mutex_lock(&mutex);
 			if(!enqueue(text,input_queue))
 				printf("Error while adding element to the queue!\n");
-
+			pthread_mutex_unlock(&mutex);
 			//Empty the string
-			sem_post(&sem_first.fillCount);
+			sem_post(&fillCount);
 			printf("Retaking semaphore!\n");
 
 			text[0]='\0';
@@ -136,14 +140,16 @@ void* te_function()
 	while(queue_status)
 	{
 		printf("Te trying to take semaphore\n");
-		int status = sem_wait(&sem_first.fillCount);
+		int status = sem_wait(&fillCount);
+		pthread_mutex_lock(&mutex);
 		queue_status = dequeue(input,input_queue);
+		pthread_mutex_unlock(&mutex);
 		printf("Te takes semaphore\n");
 		r = (char*)malloc(strlen(input) * sizeof(char));
 		read_random(r,strlen(r));
 		printf("R: %s\n",r);
 		se = get_xor(r,input);
-		sem_post(&sem_first.emptyCount);
+		sem_post(&emptyCount);
 		printf("Se: %s\n",se);
 	}
 
