@@ -11,7 +11,7 @@
 
 
 
-char* get_xor(char*,char*);
+void get_xor(char*,char*,char*);
 void* tr_read();
 void read_random(char *,int);
 void* tw_function();
@@ -50,9 +50,10 @@ int main()
     //char t[200];
     //read_random(&t,200);
     //printf("%s\n", t);
+    pthread_join(tr,NULL);
     sem_destroy(&fillCount);
     sem_destroy(&emptyCount);
-    pthread_join(tr,NULL);
+    
 
     print_queue(input_queue);
 	return 0;
@@ -109,15 +110,11 @@ void *tr_read()
 	pthread_join(te,NULL);
 }
 
-char* get_xor(char *r,char *s)
+void get_xor(char *r,char *s,char *value)
 {
-	char *value = (char* ) malloc(strlen(s) * sizeof(char));
-
 	int i;
 	for(i = 0; i < strlen(s); i++)
 		value[i] = s[i] ^ r[i];
-
-	return value;
 }
 void* tw_function()
 {
@@ -126,7 +123,7 @@ void* tw_function()
 }
 void* td_function()
 {
-	sd = get_xor(r,se);
+	get_xor(r,se,sd);
 	free(r);
 	free(se);
 }
@@ -144,13 +141,19 @@ void* te_function()
 		pthread_mutex_lock(&mutex);
 		queue_status = dequeue(input,input_queue);
 		pthread_mutex_unlock(&mutex);
-		printf("Te takes semaphore\n");
+
 		r = (char*)malloc(strlen(input) * sizeof(char));
-		read_random(r,strlen(r));
+
+		read_random(r,strlen(input));
+
 		printf("R: %s\n",r);
-		se = get_xor(r,input);
+		se =(char*) malloc(strlen(r) * sizeof(char));
+		get_xor(r,input,se);
 		sem_post(&emptyCount);
-		printf("Se: %s\n",se);
+		//printf("Se: %s\n",se);
+		
+		free(r);
+		free(se);
 	}
 
 
