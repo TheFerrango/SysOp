@@ -1,6 +1,6 @@
 #include <string.h>
 #include <semaphore.h>
-#define MAX_LENGTH 10
+#define MAX_LENGTH 256
 #define BUFFER_SIZE 20
 
 typedef struct custom_sem

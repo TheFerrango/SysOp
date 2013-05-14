@@ -22,7 +22,8 @@ int enqueue(const char *string,queue *q)
     return 0;
 
   //TODO[Mirko] test strncpy limit cases
-  strncpy(np->val,string,sizeof(np->val));
+  //strncpy(np->val,string,sizeof(np->val));
+  strcpy(np->val,string);
   //safe_copy(np->val,string);
   np->next=NULL;
 
@@ -43,7 +44,9 @@ int dequeue(char *s,queue *q)
     return 0;
   first = q->head;
 
-  strncpy(s,first->val,sizeof(s));
+  strcpy(s,first->val);
+
+  //strncpy(s,first->val,to_copy);
   //safe_copy(s,first->val);
   q->head = (struct node*) q->head->next;
   free(first);
