@@ -20,7 +20,8 @@ void* td_function();
 
 queue *input_queue;
 char text[MAX_LENGTH + 1] = "\0";
-char* r,*se,*sd;
+char r[MAX_LENGTH + 1] = "\0";
+char*se,*sd;
 sem_t sem;
 
 sem_t emptyCount,fillCount;
@@ -35,6 +36,8 @@ int main()
 
 	pthread_t tr,te;
 	input_queue = malloc(sizeof(queue));
+    //r = (char*)malloc((strlen(text)+1)*sizeof(char));
+    //r[0] = "\0";
 	pthread_mutex_init(&mutex,NULL);
 
 	sem_init(&fillCount,0,0);
@@ -52,7 +55,7 @@ int main()
     pthread_join(tr,NULL);
     sem_destroy(&fillCount);
     sem_destroy(&emptyCount);
-    
+
 
     print_queue(input_queue);
 	return 0;
@@ -85,11 +88,11 @@ void *tr_read()
 		{
             if( i < MAX_LENGTH)
                 text[i % MAX_LENGTH] = '\0';
-            
+
 
 			sem_wait(&emptyCount);
 			printf("Releasing semaphore!\n");
-			printf("%s\n", text);
+			printf("testo: %s\n", text);
 			pthread_mutex_lock(&mutex);
 			if(!enqueue(text,input_queue))
 				printf("Error while adding element to the queue!\n");
@@ -131,7 +134,7 @@ void* tw_function()
 void* td_function()
 {
 	get_xor(r,se,sd);
-	free(r);
+	//free(r);
 	free(se);
 }
 
@@ -153,7 +156,7 @@ void* te_function()
 		queue_status = dequeue(&input,input_queue);
 		pthread_mutex_unlock(&mutex);
 
-		r = (char*)malloc(strlen(input) * sizeof(char));
+		//r = (char*)malloc(strlen(input) * sizeof(char));
 
 		printf("%s\n",input );
 		read_random(r,strlen(input));
@@ -163,9 +166,9 @@ void* te_function()
 		get_xor(r,input,se);
 		sem_post(&emptyCount);
 		printf("Se: %s\n",se);
-		
-		free(r);
-		free(se);
+
+		//free(r);
+		//free(se);
 	}
 
 
@@ -173,7 +176,8 @@ void* te_function()
 
 void read_random(char *s,int s_len)
 {
-	char *tmp = (char*)malloc(s_len * sizeof(char));
+	//char *tmp = (char*)malloc(s_len * sizeof(char));
+	char tmpChar;
 	int n_bytes = s_len,n_read = 0;
 
 	int random_fd = open("/dev/urandom",O_RDONLY);
@@ -189,18 +193,24 @@ void read_random(char *s,int s_len)
 	printf("n_bytes: %i\n",n_bytes );
 	while(n_bytes > 0)
 	{
-		read(random_fd,tmp,n_bytes);
-		n_read = strlen(tmp);
+		//n_read = read(random_fd,&tmpChar,1);
 
+/*
 		if(n_read > s_len)
-			strncat(s,tmp, n_read - s_len);
+			strncat(s,tmp,  n_read-s_len);
 		else
 			strcat(s,tmp);
 
 		printf("char readed: %i\n",n_read);
 		printf("...\n");
 		n_bytes -= n_read;
-
+*/
+        if(read(random_fd,&tmpChar,1) != -1)
+        {
+            s[n_read] = tmpChar;
+            n_bytes--;
+            n_read++;
+        }
 	}
 
 	close(random_fd);

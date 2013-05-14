@@ -1,9 +1,9 @@
-all: compile rules_rsys
+all: compile
 		@echo "In teoria ho finito!"
 
 compile:
 		@echo "Compiling..."
-		gcc queue.c logs.c main.c -pthread
+		gcc utils.c logs.c queue.c main.c -pthread 
 		
 rules_rsys:
 		@echo "Generating rules file for Rsyslog.."
