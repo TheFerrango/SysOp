@@ -21,10 +21,11 @@ void* td_function();
 queue *input_queue;
 char text[MAX_LENGTH + 1] = "\0";
 char r[MAX_LENGTH + 1] = "\0";
-char*se,*sd;
+char se[MAX_LENGTH + 1] = "\0";
+char *sd;
 sem_t sem;
 
-sem_t emptyCount,fillCount;
+sem_t fillCount;
 pthread_mutex_t mutex;
 
 int main()
@@ -41,7 +42,6 @@ int main()
 	pthread_mutex_init(&mutex,NULL);
 
 	sem_init(&fillCount,0,0);
-	sem_init(&emptyCount,0,BUFFER_SIZE);
 
 
     int tr_status = pthread_create(&tr,NULL,tr_read,NULL);
@@ -54,7 +54,7 @@ int main()
     //printf("%s\n", t);
     pthread_join(tr,NULL);
     sem_destroy(&fillCount);
-    sem_destroy(&emptyCount);
+
 
 
     print_queue(input_queue);
@@ -90,7 +90,6 @@ void *tr_read()
                 text[i % MAX_LENGTH] = '\0';
 
 
-			sem_wait(&emptyCount);
 			printf("Releasing semaphore!\n");
 			printf("testo: %s\n", text);
 			pthread_mutex_lock(&mutex);
@@ -114,16 +113,18 @@ void *tr_read()
 
 void get_xor(char *r,char *s,char *value)
 {
+
 	int i;
 	int len = strlen(s);
 	char c;
 	char string[MAX_LENGTH + 1];
-	string[MAX_LENGTH] = '\0';
+
 
 	for(i = 0; i < len; i++)
 		string[i] = s[i] ^ r[i];
-
+    //string[i] = '\0';
 	strncpy(value,string,len);
+	value[i] = '\0';
 
 }
 void* tw_function()
@@ -135,7 +136,7 @@ void* td_function()
 {
 	get_xor(r,se,sd);
 	//free(r);
-	free(se);
+	//free(se);
 }
 
 void* te_function()
@@ -158,19 +159,19 @@ void* te_function()
 
 		//r = (char*)malloc(strlen(input) * sizeof(char));
 
-		printf("%s\n",input );
+		printf("INPUT: %s\n",input );
 		read_random(r,strlen(input));
 
 		printf("R: %s\n",r);
-		se = (char*) malloc(strlen(r) * sizeof(char));
+		//se = (char*) malloc((abs(strlen(r))+1) * sizeof(char));
 		get_xor(r,input,se);
-		sem_post(&emptyCount);
+
 		printf("Se: %s\n",se);
 
 		//free(r);
 		//free(se);
 	}
-
+    //free(input);
 
 }
 
@@ -180,7 +181,9 @@ void read_random(char *s,int s_len)
 	char tmpChar;
 	int n_bytes = s_len,n_read = 0;
 
+
 	int random_fd = open("/dev/urandom",O_RDONLY);
+	//int random_fd = open("/dev/random",O_RDONLY);
 
 	if(random_fd == -1)
 	{
@@ -212,6 +215,7 @@ void read_random(char *s,int s_len)
             n_read++;
         }
 	}
+	s[n_read] = '\0';
 
 	close(random_fd);
 }
