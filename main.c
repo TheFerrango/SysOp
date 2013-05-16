@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <syslog.h>
+
 #include <pthread.h>
 #include <fcntl.h>
 #include <semaphore.h>
@@ -18,16 +19,16 @@ void* tw_function();
 void* te_function();
 void* td_function();
 
-queue *input_queue, *se_queue;
+queue *input_queue, *se_queue, *sd_queue;
 char text[MAX_LENGTH + 1] = "\0";
 char r[MAX_LENGTH + 1] = "\0";
 char se[MAX_LENGTH + 1] = "\0";
 char sd[MAX_LENGTH + 1] = "\0";
 
-sem_t sem;
+pthread_t tr,te,td,tw;
 
-sem_t fillCount, se_sem;
-pthread_mutex_t mutex, se_mutex;
+sem_t fillCount, se_sem, sd_sem;
+pthread_mutex_t mutex, se_mutex,sd_mutex;
 
 int main()
 {
@@ -36,39 +37,40 @@ int main()
 	printf("Alert:\n");
 	printf("A string bigger than %i characters will overwrite itself!!!\n",MAX_LENGTH);
 
-	pthread_t tr,te,td;
 	input_queue = malloc(sizeof(queue));
 	se_queue = malloc(sizeof(queue));
+	sd_queue = malloc(sizeof(queue));
     //r = (char*)malloc((strlen(text)+1)*sizeof(char));
     //r[0] = "\0";
 	pthread_mutex_init(&mutex,NULL);
 	pthread_mutex_init(&se_mutex,NULL);
+	pthread_mutex_init(&sd_mutex,NULL);
 
 	sem_init(&fillCount,0,0);
 	sem_init(&se_sem,0,0);
+    sem_init(&sd_sem,0,0);
+
 
 
     int tr_status = pthread_create(&tr,NULL,tr_read,NULL);
     int te_status = pthread_create(&te,NULL,te_function,NULL);
 
     int td_status = pthread_create(&td,NULL,td_function,NULL);
-    //tw = pthread_create(&tw,NULL,tw_function,NULL);
+    int tw_status = pthread_create(&tw,NULL,tw_function,NULL);
 
     //printf("text len:%s\n",strlen(text));
     //char t[200];
     //read_random(&t,200);
     //printf("%s\n", t);
     pthread_join(tr,NULL);
-    sem_destroy(&fillCount);
+    //sem_destroy(&fillCount);
+    sem_destroy(&se_sem);
+    sem_destroy(&sd_sem);
 
 
 
-    print_queue(input_queue);
+    printf("That's all folks!");
 	return 0;
-}
-void init_semaphore(custom_sem sem)
-{
-	//Now this does nothing, maybe i'll use it in future
 }
 
 void *tr_read()
@@ -79,7 +81,6 @@ void *tr_read()
 
     //int status = sem_wait(&sem);
     //printf("Tr started successfully...\n");
-
 
 	do
 	{
@@ -110,7 +111,12 @@ void *tr_read()
 	while(strstr(text,"quit") == NULL);
 
 	//pthread_join degli altri thread
+	printf("TR EXTERMINATED\n");
+	sem_post(&fillCount);
 	pthread_join(te,NULL);
+	pthread_join(td,NULL);
+	pthread_join(tw,NULL);
+
 }
 
 void get_xor(char *r,char *s,char *value)
@@ -131,14 +137,28 @@ void get_xor(char *r,char *s,char *value)
 }
 void* tw_function()
 {
-	printf("Sd: %s\n", sd);
-	free(sd);
+    int queue_status = 1;
+    char output[MAX_LENGTH +1];
+	output[0] = '\0';
+
+    while(queue_status)
+    {
+        sem_wait(&sd_sem);
+        pthread_mutex_lock(&sd_mutex);
+		queue_status = dequeue(&output,sd_queue);
+		pthread_mutex_unlock(&sd_mutex);
+        printf("SD:\t %s\n", sd);
+    }
+    printf("TW EXTERMINATED\n");
+    //pthread_join(td,NULL);
+
 }
 void* td_function()
 {
     int queue_status = 1;
     char input[MAX_LENGTH +1];
 	input[0] = '\0';
+
 
     while(queue_status)
     {
@@ -147,9 +167,16 @@ void* td_function()
 		queue_status = dequeue(&input,se_queue);
 		pthread_mutex_unlock(&se_mutex);
         get_xor(r,se,sd);
-        printf("SD: %s\n",sd);
-    }
 
+        pthread_mutex_lock(&sd_mutex);
+        enqueue(&sd, sd_queue);
+        pthread_mutex_unlock(&sd_mutex);
+
+        sem_post(&sd_sem);
+    }
+    printf("TD EXTERMINATED\n");
+    sem_post(&sd_sem);
+    //pthread_join(tw,NULL);
 	//free(r);
 	//free(se);
 }
@@ -179,20 +206,22 @@ void* te_function()
 		//printf("INPUT: %s\n",input );
 		read_random(r,strlen(input));
 
-		printf("R: %s\n",r);
+		printf("R:\t %s\n",r);
 		//se = (char*) malloc((abs(strlen(r))+1) * sizeof(char));
 		get_xor(r,input,se);
 		pthread_mutex_lock(&se_mutex);
         enqueue(&se,se_queue);
         pthread_mutex_unlock(&se_mutex);
-		printf("SE: %s\n",se);
+		printf("SE:\t %s\n",se);
 		sem_post(&se_sem);
 
 		//free(r);
 		//free(se);
 	}
     //free(input);
-
+    printf("TE EXTERMINATED\n");
+    sem_post(&se_sem);
+	pthread_join(td, NULL);
 }
 
 void read_random(char *s,int s_len)
