@@ -18,15 +18,16 @@ void* tw_function();
 void* te_function();
 void* td_function();
 
-queue *input_queue;
+queue *input_queue, *se_queue;
 char text[MAX_LENGTH + 1] = "\0";
 char r[MAX_LENGTH + 1] = "\0";
 char se[MAX_LENGTH + 1] = "\0";
-char *sd;
+char sd[MAX_LENGTH + 1] = "\0";
+
 sem_t sem;
 
-sem_t fillCount;
-pthread_mutex_t mutex;
+sem_t fillCount, se_sem;
+pthread_mutex_t mutex, se_mutex;
 
 int main()
 {
@@ -35,18 +36,23 @@ int main()
 	printf("Alert:\n");
 	printf("A string bigger than %i characters will overwrite itself!!!\n",MAX_LENGTH);
 
-	pthread_t tr,te;
+	pthread_t tr,te,td;
 	input_queue = malloc(sizeof(queue));
+	se_queue = malloc(sizeof(queue));
     //r = (char*)malloc((strlen(text)+1)*sizeof(char));
     //r[0] = "\0";
 	pthread_mutex_init(&mutex,NULL);
+	pthread_mutex_init(&se_mutex,NULL);
 
 	sem_init(&fillCount,0,0);
+	sem_init(&se_sem,0,0);
 
 
     int tr_status = pthread_create(&tr,NULL,tr_read,NULL);
-    /**td = pthread_create(&td,NULL,td_function,NULL);
-    tw = pthread_create(&tw,NULL,tw_function,NULL);**/
+    int te_status = pthread_create(&te,NULL,te_function,NULL);
+
+    int td_status = pthread_create(&td,NULL,td_function,NULL);
+    //tw = pthread_create(&tw,NULL,tw_function,NULL);
 
     //printf("text len:%s\n",strlen(text));
     //char t[200];
@@ -70,10 +76,9 @@ void *tr_read()
 	pthread_t te;
 	init(input_queue);
     int i = 0;
-    int te_status = pthread_create(&te,NULL,te_function,NULL);
 
     //int status = sem_wait(&sem);
-    printf("Tr started successfully...\n");
+    //printf("Tr started successfully...\n");
 
 
 	do
@@ -90,16 +95,13 @@ void *tr_read()
                 text[i % MAX_LENGTH] = '\0';
 
 
-			printf("Releasing semaphore!\n");
-			printf("testo: %s\n", text);
+			//printf("testo: %s\n", text);
 			pthread_mutex_lock(&mutex);
 			if(!enqueue(text,input_queue))
 				printf("Error while adding element to the queue!\n");
 			pthread_mutex_unlock(&mutex);
 			//Empty the string
 			sem_post(&fillCount);
-			printf("Retaking semaphore!\n");
-
 			text[0]='\0';
 			i=0;
 
@@ -134,7 +136,20 @@ void* tw_function()
 }
 void* td_function()
 {
-	get_xor(r,se,sd);
+    int queue_status = 1;
+    char input[MAX_LENGTH +1];
+	input[0] = '\0';
+
+    while(queue_status)
+    {
+        sem_wait(&se_sem);
+        pthread_mutex_lock(&se_mutex);
+		queue_status = dequeue(&input,se_queue);
+		pthread_mutex_unlock(&se_mutex);
+        get_xor(r,se,sd);
+        printf("SD: %s\n",sd);
+    }
+
 	//free(r);
 	//free(se);
 }
@@ -142,16 +157,18 @@ void* td_function()
 void* te_function()
 {
 	//char *input = (char*)malloc(MAX_LENGTH * sizeof(char));
+    init(se_queue);
 	char input[MAX_LENGTH +1];
+
 	input[0] = '\0';
 
-	printf("sizeof input %i\n",sizeof(input));
-	printf("Te thread started successfully!\n");
+	//printf("sizeof input %i\n",sizeof(input));
+	//printf("Te thread started successfully!\n");
 	int queue_status = 1;
 
 	while(queue_status)
 	{
-		printf("Te trying to take semaphore\n");
+		//printf("Te trying to take semaphore\n");
 		int status = sem_wait(&fillCount);
 		pthread_mutex_lock(&mutex);
 		queue_status = dequeue(&input,input_queue);
@@ -159,14 +176,17 @@ void* te_function()
 
 		//r = (char*)malloc(strlen(input) * sizeof(char));
 
-		printf("INPUT: %s\n",input );
+		//printf("INPUT: %s\n",input );
 		read_random(r,strlen(input));
 
 		printf("R: %s\n",r);
 		//se = (char*) malloc((abs(strlen(r))+1) * sizeof(char));
 		get_xor(r,input,se);
-
-		printf("Se: %s\n",se);
+		pthread_mutex_lock(&se_mutex);
+        enqueue(&se,se_queue);
+        pthread_mutex_unlock(&se_mutex);
+		printf("SE: %s\n",se);
+		sem_post(&se_sem);
 
 		//free(r);
 		//free(se);
@@ -182,7 +202,7 @@ void read_random(char *s,int s_len)
 	int n_bytes = s_len,n_read = 0;
 
 
-	int random_fd = open("/dev/urandom",O_RDONLY);
+	int random_fd = open("/dev/random",O_RDONLY);
 	//int random_fd = open("/dev/random",O_RDONLY);
 
 	if(random_fd == -1)
@@ -192,8 +212,7 @@ void read_random(char *s,int s_len)
 	}
 
 	printf("Reading from /dev/random... This may take a while!\n");
-	//TODO provare a leggere un carattere alla volta
-	printf("n_bytes: %i\n",n_bytes );
+	//printf("n_bytes: %i\n",n_bytes );
 	while(n_bytes > 0)
 	{
 		//n_read = read(random_fd,&tmpChar,1);
