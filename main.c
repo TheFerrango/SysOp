@@ -69,7 +69,7 @@ int main()
 
 
 
-    printf("That's all folks!");
+    printf("That's all folks! ");
 	return 0;
 }
 
