@@ -18,6 +18,7 @@ void read_random(char *,int);
 void* tw_function();
 void* te_function();
 void* td_function();
+void empty_string(char*);
 
 queue *input_queue, *se_queue, *sd_queue;
 char text[MAX_LENGTH + 1] = "\0";
@@ -29,6 +30,8 @@ pthread_t tr,te,td,tw;
 
 sem_t fillCount, se_sem, sd_sem;
 pthread_mutex_t mutex, se_mutex,sd_mutex;
+
+int exit_status = -1;
 
 int main()
 {
@@ -95,24 +98,29 @@ void *tr_read()
             if( i < MAX_LENGTH)
                 text[i % MAX_LENGTH] = '\0';
 
-
 			//printf("testo: %s\n", text);
+			exit_status = strcmp(text,"quit");
+			if(exit_status == 0)
+                empty_string(text);
 			pthread_mutex_lock(&mutex);
 			if(!enqueue(text,input_queue))
 				printf("Error while adding element to the queue!\n");
 			pthread_mutex_unlock(&mutex);
 			//Empty the string
 			sem_post(&fillCount);
-			text[0]='\0';
+			empty_string(text);
 			i=0;
 
 		}
+
+
 	}
-	while(strstr(text,"quit") == NULL);
+	//while(strcmp(text,"quit") != 0);
+	while(exit_status);
 
 	//pthread_join degli altri thread
 	printf("TR EXTERMINATED\n");
-	sem_post(&fillCount);
+	//sem_post(&fillCount);
 	pthread_join(te,NULL);
 	pthread_join(td,NULL);
 	pthread_join(tw,NULL);
@@ -135,19 +143,26 @@ void get_xor(char *r,char *s,char *value)
 	value[i] = '\0';
 
 }
+void empty_string(char *s)
+{
+    s[0] ='\0';
+}
 void* tw_function()
 {
     int queue_status = 1;
     char output[MAX_LENGTH +1];
 	output[0] = '\0';
 
-    while(queue_status)
+    while(queue_status && exit_status)
     {
         sem_wait(&sd_sem);
         pthread_mutex_lock(&sd_mutex);
 		queue_status = dequeue(&output,sd_queue);
 		pthread_mutex_unlock(&sd_mutex);
-        printf("SD:\t %s\n", sd);
+
+		if(strlen(sd) > 0)
+            printf("SD:\t %s\n", sd);
+        empty_string(&sd);
     }
     printf("TW EXTERMINATED\n");
     //pthread_join(td,NULL);
@@ -160,7 +175,7 @@ void* td_function()
 	input[0] = '\0';
 
 
-    while(queue_status)
+    while(queue_status && exit_status)
     {
         sem_wait(&se_sem);
         pthread_mutex_lock(&se_mutex);
@@ -193,7 +208,7 @@ void* te_function()
 	//printf("Te thread started successfully!\n");
 	int queue_status = 1;
 
-	while(queue_status)
+	while(queue_status && exit_status)
 	{
 		//printf("Te trying to take semaphore\n");
 		int status = sem_wait(&fillCount);
@@ -204,15 +219,19 @@ void* te_function()
 		//r = (char*)malloc(strlen(input) * sizeof(char));
 
 		//printf("INPUT: %s\n",input );
+
 		read_random(r,strlen(input));
 
-		printf("R:\t %s\n",r);
+        if(strlen(r) > 0)
+            printf("R:\t %s\n",r);
 		//se = (char*) malloc((abs(strlen(r))+1) * sizeof(char));
 		get_xor(r,input,se);
 		pthread_mutex_lock(&se_mutex);
         enqueue(&se,se_queue);
         pthread_mutex_unlock(&se_mutex);
-		printf("SE:\t %s\n",se);
+
+        if(strlen(se) > 0)
+            printf("SE:\t %s\n",se);
 		sem_post(&se_sem);
 
 		//free(r);
@@ -221,7 +240,7 @@ void* te_function()
     //free(input);
     printf("TE EXTERMINATED\n");
     sem_post(&se_sem);
-	pthread_join(td, NULL);
+	//pthread_join(td, NULL);
 }
 
 void read_random(char *s,int s_len)
@@ -229,6 +248,7 @@ void read_random(char *s,int s_len)
 	//char *tmp = (char*)malloc(s_len * sizeof(char));
 	char tmpChar;
 	int n_bytes = s_len,n_read = 0;
+	int offset = 33;
 
 
 	int random_fd = open("/dev/random",O_RDONLY);
@@ -258,6 +278,7 @@ void read_random(char *s,int s_len)
 */
         if(read(random_fd,&tmpChar,1) != -1)
         {
+            tmpChar = (char)((abs((int)tmpChar) % 93) + offset);
             s[n_read] = tmpChar;
             n_bytes--;
             n_read++;
