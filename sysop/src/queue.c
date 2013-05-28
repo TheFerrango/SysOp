@@ -22,13 +22,7 @@ int enqueue(const char *string,queue *q)
   np->val = malloc(sizeof(char)*(MAX_LENGTH + 1));
   if (np==NULL)
     return 0;
-
-  //TODO[Mirko] test strncpy limit cases
-
-  //safe_copy(np->val,string,sizeof(np->val));
   strcpy(np->val,string);
-
-  //safe_copy(np->val,string);
   np->next=NULL;
 
   if (emptyp(q))
@@ -48,29 +42,12 @@ int dequeue(char *s,queue *q)
     return 0;
   first = q->head;
 
-  //safe_copy(s,first->val, sizeof(s));
-
-
   strcpy(s,first->val);
-  //safe_copy(s,first->val);
   q->head = (struct node*) q->head->next;
 
   free(first->val);
   free(first);
   return 1;
-}
-
-void print_queue(const queue *q)
-{
-  if (!emptyp(q))
-  {
-    node * first=q->head;
-    do
-    {
-      printf("%s\n",first->val);
-      first = first->next;
-    } while (first != NULL);
-  }
 }
 
 
