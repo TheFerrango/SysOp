@@ -1,13 +1,11 @@
 #include "queue.h"
 #include <pthread.h>
 
-static int emptyp (const queue *q)
-{
+static int emptyp (const queue *q) {
     return q->head == NULL?1:0;
 }
 
-void init(queue *q)
-{
+void init(queue *q) {
     pthread_mutex_init(&q->queue_lock, NULL);  
     q->head = malloc(sizeof(node));
     q->tail = malloc(sizeof(node));
@@ -15,8 +13,7 @@ void init(queue *q)
     q->tail = NULL;
 }
 
-int enqueue(const char *string,queue *q)
-{
+int enqueue(const char *string,queue *q) {
     pthread_mutex_lock(&q->queue_lock);
     node *np = malloc(sizeof(node));
     np->val = malloc(sizeof(char)*(MAX_LENGTH + 1));
@@ -26,12 +23,9 @@ int enqueue(const char *string,queue *q)
     }
     strcpy(np->val,string);
     np->next=NULL;
-
     if (emptyp(q)) {
         q->head=q->tail=np;
-    }
-    else
-    {
+    } else {
         q->tail->next = np;
         q->tail=np;
     }
@@ -39,8 +33,7 @@ int enqueue(const char *string,queue *q)
     return 1;
 }
 
-int dequeue(char *s,queue *q)
-{
+int dequeue(char *s,queue *q) {
     pthread_mutex_lock(&q->queue_lock);
     node * first;
     if (emptyp(q)) {
@@ -48,10 +41,8 @@ int dequeue(char *s,queue *q)
         return 0;
     }
     first = q->head;
-
     strcpy(s,first->val);
     q->head = (struct node*) q->head->next;
-
     free(first->val);
     free(first);
     pthread_mutex_unlock(&q->queue_lock);
