@@ -27,8 +27,6 @@ int s_tr = -1, s_te = -1, s_td = -1, s_tw = -1;
 /* queues for thread message passing */
 queue *q_s, *q_r, *q_se, *q_sd;
 
-/* execution value */
-int alive = 1, td_alive = 1, te_alive = 1;
 
 
 int main() {
@@ -75,18 +73,17 @@ void* tr() {
     char input[MAX_LENGTH];
 
     /* thread main loop */
-    while (alive > 0) {
+    while (1) {
         log_info("tr","tr started");
         /* reading user input */
         fgets(input, sizeof(input), stdin);
         if (strcmp(input, "quit\n\0") == 0) {
             /* exiting on "quit" command */
-            alive = 0;
+            break;
             continue;
         } else {
             if (enqueue(input, q_s) < 1) {
                 /* critical error (nearly impossible) */
-                alive = 0;
                 exit(1);
             }
         }
@@ -110,7 +107,6 @@ void* te() {
     while (1) {
         /* waiting for some data to be processed */
         sem_wait(&sem_tr);
-        log_error("te","te started");
         if (dequeue(input, q_s) < 1) {
             /* no data ready to read (the program is shutting down) */
             break;
@@ -131,7 +127,6 @@ void* te() {
     }
     /* escape route (unlocks awaiting threads when closing everything) */
     sem_post(&sem_te);
-    te_alive = 0;
     return NULL;
 }
 
@@ -148,7 +143,6 @@ void* td() {
     while (1) {
         /* waiting for some data to be processed */
         sem_wait(&sem_te);
-        log_debug("td","td started");
         if (dequeue(input, q_se) < 1) {
             /* no data ready to read (the program is shutting down) */
             break;
@@ -201,6 +195,7 @@ void get_random(int bytes, char* output) {
 
     for (; i < bytes; i++){
         read(random_data, &output[i], sizeof(char));
+        /* Convert random output in characters that can be displayed (from 33 to 126) */
         output[i] = (char)((abs((int)output[i]) % 93) + offset);
     }
     close(random_data);
