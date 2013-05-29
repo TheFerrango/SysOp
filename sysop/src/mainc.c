@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "queue.h"
+#include "logs.h"
 
-#define MAX_LENGTH 256
 
 /* thread functions */
 void *tr();
@@ -28,10 +28,10 @@ int s_tr = -1, s_te = -1, s_td = -1, s_tw = -1;
 queue *q_s, *q_r, *q_se, *q_sd;
 
 /* execution value */
-int alive = 1;
+int alive = 1, td_alive = 1, te_alive = 1;
 
 
-int main() {    
+int main() {
     /* queues initialization */
     q_s = malloc(sizeof(queue));
     init(q_s);
@@ -41,21 +41,21 @@ int main() {
     init(q_se);
     q_sd = malloc(sizeof(queue));
     init(q_sd);
-    
+
     /* semaphores initialization */
     sem_init(&sem_tr, 0, 0);
     sem_init(&sem_te, 0, 0);
     sem_init(&sem_td, 0, 0);
-    
+
     /* starting first thread (TR, reading one) */
-    s_tr = pthread_create(&t_tr, NULL, tr, NULL); 
-    
+    s_tr = pthread_create(&t_tr, NULL, tr, NULL);
+
     /* waiting for all thread to finish before exiting */
     pthread_join(t_tr, NULL);
     pthread_join(t_te, NULL);
     pthread_join(t_td, NULL);
     pthread_join(t_tw, NULL);
-    
+
     /* freeing resources */
     sem_destroy(&sem_tr);
     sem_destroy(&sem_te);
@@ -63,28 +63,29 @@ int main() {
     free(q_r);
     free(q_se);
     free(q_sd);
-    
-    return 0;   
+
+    return 0;
 }
 
 void* tr() {
     /* during first run, starting TE thread */
-    if (s_te < 0) {    
+    if (s_te < 0) {
         s_te = pthread_create(&t_te, NULL, te, NULL);
-    } 
-    char input[MAX_LENGTH];    
-    
+    }
+    char input[MAX_LENGTH];
+
     /* thread main loop */
     while (alive > 0) {
+        log_info("tr","tr started");
         /* reading user input */
         fgets(input, sizeof(input), stdin);
         if (strcmp(input, "quit\n\0") == 0) {
-            /* exiting on "quit" command */            
+            /* exiting on "quit" command */
             alive = 0;
             continue;
         } else {
             if (enqueue(input, q_s) < 1) {
-                /* critical error (nearly impossible) */                
+                /* critical error (nearly impossible) */
                 alive = 0;
                 exit(1);
             }
@@ -97,35 +98,40 @@ void* tr() {
     return NULL;
 }
 
-void* te() {    
+void* te() {
     /* during first run, starting TD thread */
     if (s_td < 0) {
         s_td = pthread_create(&t_td, NULL, td, NULL);
     }
     char input[MAX_LENGTH];
     char output[MAX_LENGTH];
-    
+
     /* thread main loop */
-    while (alive > 0) {
+    while (1) {
         /* waiting for some data to be processed */
         sem_wait(&sem_tr);
+        log_error("te","te started");
         if (dequeue(input, q_s) < 1) {
             /* no data ready to read (the program is shutting down) */
-            continue;
+            break;
         }
         /* getting some random data */
-        get_random(strlen(input), output);  
+        get_random(strlen(input), output);
         /* saving the random data */
         enqueue(output, q_r);
+        printf("R:\t %s\n",output);
+
         /* encryption */
         xor(input, output);
         /* saving encrypted data */
         enqueue(input, q_se);
+        printf("SE:\t %s\n",input);
         /* signaling new data is ready */
         sem_post(&sem_te);
-    }   
-    /* escape route (unlocks awaiting threads when closing everythin) */
+    }
+    /* escape route (unlocks awaiting threads when closing everything) */
     sem_post(&sem_te);
+    te_alive = 0;
     return NULL;
 }
 
@@ -136,18 +142,20 @@ void* td() {
     }
     char input[MAX_LENGTH];
     char mask[MAX_LENGTH];
-    
+
+
     /* thread main loop */
-    while (alive > 0) {
+    while (1) {
         /* waiting for some data to be processed */
         sem_wait(&sem_te);
+        log_debug("td","td started");
         if (dequeue(input, q_se) < 1) {
             /* no data ready to read (the program is shutting down) */
-            continue;
+            break;
         }
         if (dequeue(mask, q_r) < 1) {
             /* no data ready to read (the program is shutting down) */
-            continue;
+            break;
         }
         /* decryption */
         xor(input, mask);
@@ -163,17 +171,17 @@ void* td() {
 
 void* tw() {
     char output[MAX_LENGTH];
-    
+
     /* thread main loop */
-    while (alive > 0) {
+    while (1) {
         /* waiting for some data to be processed */
         sem_wait(&sem_td);
         if (dequeue(output, q_sd) < 1) {
             /* no data ready to read (the program is shutting down) */
-            continue;
+            break;
         } else {
             /* printing decrypted data */
-            printf("%s", output);
+            printf("SD:\t %s\n", output);
         }
     }
     return NULL;
@@ -181,16 +189,22 @@ void* tw() {
 
 // Returns the specified number of random bytes
 void get_random(int bytes, char* output) {
+
     int random_data = open("/dev/random", O_RDONLY);
     if (random_data < 0){
         /* error opening stream */
         exit(2);
     }
+
     int i = 0;
+    int offset = 33;
+
     for (; i < bytes; i++){
         read(random_data, &output[i], sizeof(char));
+        output[i] = (char)((abs((int)output[i]) % 93) + offset);
     }
     close(random_data);
+    output[i] = '\0';
 }
 
 // XOR between input and mask

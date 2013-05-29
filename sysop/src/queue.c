@@ -1,12 +1,12 @@
 #include "queue.h"
 #include <pthread.h>
 
-static int emptyp (const queue *q) {
+int emptyp (const queue *q) {
     return q->head == NULL?1:0;
 }
 
 void init(queue *q) {
-    pthread_mutex_init(&q->queue_lock, NULL);  
+    pthread_mutex_init(&q->queue_lock, NULL);
     q->head = malloc(sizeof(node));
     q->tail = malloc(sizeof(node));
     q->head = NULL;

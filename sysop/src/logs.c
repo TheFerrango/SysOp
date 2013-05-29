@@ -23,7 +23,6 @@ void log_generic(char * which_log, char * log_message, int log_type)
     strcat(log_s, " ");
     strcat(log_s, log_message);
     log_s[strlen(log_s)] = '\0';
-    printf("%s\n", log_s);
     openlog(which_log, 0, LOG_LOCAL0);
     syslog(log_type, "%s", log_s);
     closelog();
@@ -34,7 +33,7 @@ void log_generic(char * which_log, char * log_message, int log_type)
 void log_error(char * which_log,  char * log_message)
 {
     pthread_mutex_lock(&m_log);
-    log_generic(which_log, log_message, LOG_ERR);    
+    log_generic(which_log, log_message, LOG_ERR);
     pthread_mutex_unlock(&m_log);
 }
 
@@ -60,7 +59,7 @@ char* time_stamp()
     struct tm *today_date;
     today_date = localtime(&curr_time);
     sprintf(timestamp, "%02d/%02d/%04d-%02d:%02d:%02d -> ", today_date->tm_mday,
-            today_date->tm_mon+1, today_date->tm_year+1900, today_date->tm_hour, today_date->tm_min, today_date->tm_sec);  
-    timestamp[strlen(timestamp)] = '\0';       
-    return timestamp;      
+            today_date->tm_mon+1, today_date->tm_year+1900, today_date->tm_hour, today_date->tm_min, today_date->tm_sec);
+    timestamp[strlen(timestamp)] = '\0';
+    return timestamp;
 }

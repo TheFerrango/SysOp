@@ -2,9 +2,9 @@ all: compile
 		@echo "In teoria ho finito!"
 
 compile:
-		@echo "Compiling..."
-		gcc utils.c logs.c queue.c main.c -pthread 
-		
+		@echo "Entering directory src..."
+		cd src; @echo "Compiling..."; gcc logs.c queue.c mainc.c -pthread;
+
 rules_rsys:
 		@echo "Generating rules file for Rsyslog.."
 		touch /etc/rsyslog.d/pimpedRules.conf

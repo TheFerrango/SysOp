@@ -1,11 +1,12 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
+#define MAX_LENGTH 256
 
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "utils.h"
+
 
 
 typedef struct node {
@@ -22,6 +23,7 @@ typedef struct  queue {
 void init(queue *);
 int enqueue(const char *,queue *);
 int dequeue(char *,queue *);
+int emptyp (const queue *q);
 
 
 #endif
