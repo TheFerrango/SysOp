@@ -6,7 +6,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <syslog.h>
+#include <pthread.h>
 #include "logs.h"
+
+
+pthread_mutex_t m_log;
 
 char* time_stamp();
 
@@ -29,17 +33,23 @@ void log_generic(char * which_log, char * log_message, int log_type)
 
 void log_error(char * which_log,  char * log_message)
 {
+    pthread_mutex_lock(&m_log);
     log_generic(which_log, log_message, LOG_ERR);    
+    pthread_mutex_unlock(&m_log);
 }
 
 void log_info(char * which_log,  char * log_message)
 {
+    pthread_mutex_lock(&m_log);
     log_generic(which_log, log_message, LOG_INFO);
+    pthread_mutex_unlock(&m_log);
 }
 
 void log_debug(char * which_log,  char * log_message)
 {
+    pthread_mutex_lock(&m_log);
     log_generic(which_log, log_message, LOG_DEBUG);
+    pthread_mutex_unlock(&m_log);
 }
 
 /* timestamp function; returns a formatted timestamp */
