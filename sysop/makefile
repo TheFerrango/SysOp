@@ -4,7 +4,7 @@ all: compile rules_rsys
 compile:
 		@echo "Entering directory src..."
 		@echo "Compiling..."; 
-		cd src; gcc logs.c queue.c mainc.c -pthread;
+		cd src; gcc logs.c queue.c mainc.c -pthread -o prog2; chmod 711 prog2;
 
 rules_rsys:
 		@echo "Generating rules file for Rsyslog.."
