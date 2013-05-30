@@ -30,6 +30,7 @@ queue *q_s, *q_r, *q_se, *q_sd;
 
 
 int main() {
+    
     /* queues initialization */
     q_s = malloc(sizeof(queue));
     init(q_s);
@@ -66,6 +67,7 @@ int main() {
 }
 
 void* tr() {
+    log_info("tr", "starting thread tr");
     /* during first run, starting TE thread */
     if (s_te < 0) {
         s_te = pthread_create(&t_te, NULL, te, NULL);
@@ -74,28 +76,30 @@ void* tr() {
 
     /* thread main loop */
     while (1) {
-        log_info("tr","tr started");
         /* reading user input */
         fgets(input, sizeof(input), stdin);
         if (strcmp(input, "quit\n\0") == 0) {
             /* exiting on "quit" command */
+            log_info("tr", "exit string dected. Now exiting");
             break;
-            continue;
         } else {
             if (enqueue(input, q_s) < 1) {
                 /* critical error (nearly impossible) */
+                log_error("tr", "error while enqueuing element. Now exiting");
                 exit(1);
             }
         }
         /* signaling new data is ready */
         sem_post(&sem_tr);
     }
+    log_info("tr", "exiting thread tr");
     /* escape route (unlocks awaiting threads when closing everythin) */
     sem_post(&sem_tr);
     return NULL;
 }
 
 void* te() {
+    log_info("te", "starting thread te");
     /* during first run, starting TD thread */
     if (s_td < 0) {
         s_td = pthread_create(&t_td, NULL, td, NULL);
@@ -108,29 +112,37 @@ void* te() {
         /* waiting for some data to be processed */
         sem_wait(&sem_tr);
         if (dequeue(input, q_s) < 1) {
+            log_info("te", "no item to dequeue. Now exiting");
             /* no data ready to read (the program is shutting down) */
             break;
         }
+        log_info("te", "obtaining random string");
         /* getting some random data */
         get_random(strlen(input), output);
         /* saving the random data */
+        log_info("te", "adding random character sequence to queue");
         enqueue(output, q_r);
         printf("R:\t %s\n",output);
 
+        log_info("te", "executing xor operation");
         /* encryption */
         xor(input, output);
+        
+        log_info("te", "adding encrypted string to queue");
         /* saving encrypted data */
         enqueue(input, q_se);
         printf("SE:\t %s\n",input);
         /* signaling new data is ready */
         sem_post(&sem_te);
     }
+    log_info("te", "exiting thread te");
     /* escape route (unlocks awaiting threads when closing everything) */
     sem_post(&sem_te);
     return NULL;
 }
 
 void* td() {
+    log_info("td", "starting thread td");
     /* during first run, starting TW thread */
     if (s_tw < 0) {
         s_tw = pthread_create(&t_tw, NULL, tw, NULL);
@@ -144,26 +156,32 @@ void* td() {
         /* waiting for some data to be processed */
         sem_wait(&sem_te);
         if (dequeue(input, q_se) < 1) {
+            log_info("td", "no item to dequeue. Now exiting");
             /* no data ready to read (the program is shutting down) */
             break;
         }
         if (dequeue(mask, q_r) < 1) {
+            log_info("td", "no item to dequeue. Now exiting");
             /* no data ready to read (the program is shutting down) */
             break;
         }
+        log_info("td", "executing xor operation");
         /* decryption */
         xor(input, mask);
+        log_info("td", "adding decrypted string to queue");
         /* saving decrypted data */
         enqueue(input, q_sd);
         /* signaling new data is ready */
         sem_post(&sem_td);
     }
+    log_info("td", "exiting thread tr");
     /* escape route (unlocks awaiting threads when closing everythin) */
     sem_post(&sem_td);
     return NULL;
 }
 
 void* tw() {
+    log_info("tw", "starting thread tw");
     char output[MAX_LENGTH];
 
     /* thread main loop */
@@ -171,6 +189,7 @@ void* tw() {
         /* waiting for some data to be processed */
         sem_wait(&sem_td);
         if (dequeue(output, q_sd) < 1) {
+            log_info("td", "no item to dequque. Now exiting");
             /* no data ready to read (the program is shutting down) */
             break;
         } else {
@@ -178,6 +197,7 @@ void* tw() {
             printf("SD:\t %s\n", output);
         }
     }
+    log_info("tw", "exiting thread tw");
     return NULL;
 }
 
@@ -186,6 +206,7 @@ void get_random(int bytes, char* output) {
 
     int random_data = open("/dev/random", O_RDONLY);
     if (random_data < 0){
+        log_error("te", "error while opening /dev/random. Now exiting");
         /* error opening stream */
         exit(2);
     }
