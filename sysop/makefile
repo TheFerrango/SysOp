@@ -1,9 +1,10 @@
-all: compile
+all: compile rules_rsys
 		@echo "In teoria ho finito!"
 
 compile:
 		@echo "Entering directory src..."
-		cd src; @echo "Compiling..."; gcc logs.c queue.c mainc.c -pthread;
+		@echo "Compiling..."; 
+		cd src; gcc logs.c queue.c mainc.c -pthread;
 
 rules_rsys:
 		@echo "Generating rules file for Rsyslog.."
@@ -15,4 +16,4 @@ rules_rsys:
 		@echo "if \$$programname == 'td' then /var/log/td.log" >> /etc/rsyslog.d/pimpedRules.conf
 		@echo "if \$$programname == 'tw' then /var/log/tw.log" >> /etc/rsyslog.d/pimpedRules.conf
 		@echo "Adesso restarto il sistema di log"
-		pkill -HUP rsyslogd
+		service rsyslog restart

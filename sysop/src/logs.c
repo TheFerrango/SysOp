@@ -23,11 +23,11 @@ void log_generic(char * which_log, char * log_message, int log_type)
     log_s[0] = '\0';
 
     /* gets formatted date time */
-    char * date = date_time();
+//    char * date = date_time();
 
     /* prepares string to write on log */
-    strcat(log_s, date);
-    strcat(log_s, " ");
+  //  strcat(log_s, date);
+    //strcat(log_s, " ");
     strcat(log_s, log_message);
     log_s[strlen(log_s)] = '\0';
 
@@ -42,7 +42,7 @@ void log_generic(char * which_log, char * log_message, int log_type)
 
     /* freeing up memory */
     free(log_s);
-    free(date);
+    //free(date);
 }
 
 /* logs an error message for a thread */
