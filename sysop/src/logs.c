@@ -1,10 +1,16 @@
+/*
+A. A 2012/2013
+Corso di laurea di informatica
+
+Buratti Alberto (145552), 
+Lotto Lorenzo (151775), 
+Morandi Mirko(151778)
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <syslog.h>
 #include <pthread.h>
 #include "logs.h"
@@ -13,7 +19,6 @@
 /* mutex to handle cuncurrent logs */
 pthread_mutex_t m_log;
 
-char* date_time();
 
 /* internal function that writes to the syslog socket */
 void log_generic(char * which_log, char * log_message, int log_type)
@@ -72,19 +77,4 @@ void log_debug(char * which_log,  char * log_message)
     pthread_mutex_lock(&m_log);
     log_generic(which_log, log_message, LOG_DEBUG);
     pthread_mutex_unlock(&m_log);
-}
-
-/* timestamp function; returns a formatted timestamp */
-char* date_time()
-{
-    char * timestamp = malloc(sizeof(char)*23);
-    time_t curr_time = time(NULL);
-    struct tm *today_date;
-    today_date = localtime(&curr_time);
-    sprintf(timestamp, "%02d/%02d/%04d-%02d:%02d:%02d -> ",
-            today_date->tm_mday, today_date->tm_mon+1,
-            today_date->tm_year+1900, today_date->tm_hour,
-            today_date->tm_min, today_date->tm_sec);
-    timestamp[strlen(timestamp)] = '\0';
-    return timestamp;
 }
