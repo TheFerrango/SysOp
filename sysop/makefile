@@ -1,14 +1,15 @@
 all: compile rules_rsys
-		@echo "In teoria ho finito!"
+		@echo "All done!!"
 
 compile:
 		@echo "Entering directory src..."
 		@echo "Compiling..."; 
-		cd src; gcc logs.c queue.c mainc.c -pthread -o prog2; chmod 711 prog2;
+		@cd src; gcc logs.c queue.c mainc.c -pthread -o prog2; chmod 711 prog2;
+		@echo "Compiled"
 
 rules_rsys:
 		@echo "Generating rules file for Rsyslog"
-		touch /etc/rsyslog.d/progTwoRules.conf
+		@touch /etc/rsyslog.d/progTwoRules.conf
 		@echo "" > /etc/rsyslog.d/progTwoRules.conf
 		@echo "Adding rules"
 		@echo "if \$$programname == 'tr' then /var/log/threads/tr.log" >> /etc/rsyslog.d/progTwoRules.conf
@@ -21,9 +22,9 @@ rules_rsys:
 install: 
 		@echo "Entering directory src"
 		@echo "Moving files"
-		cp src/prog2 /usr/bin/
+		@cp src/prog2 /usr/bin/
 		@echo "Setting permissions"
-		chmod 711 /usr/bin/prog2
+		@chmod 711 /usr/bin/prog2
 		@echo "Application installed"
 
 clean:
