@@ -4,7 +4,7 @@ all: compile rules_rsys
 compile:
 		@echo "Entering directory src..."
 		@echo "Compiling..."; 
-		@cd src; gcc logs.c queue.c mainc.c -pthread -o prog2; chmod 711 prog2;
+		@cd src; gcc logs.c queue.c mainc.c -pthread -o threads; chmod 711 threads;
 		@echo "Compiled"
 
 rules_rsys:
@@ -22,12 +22,12 @@ rules_rsys:
 install: compile rules_rsys
 		@echo "Entering directory src"
 		@echo "Moving files"
-		@cp src/prog2 /usr/bin/
+		@cp src/threads /usr/bin/
 		@echo "Setting permissions"
-		@chmod 711 /usr/bin/prog2
+		@chmod 711 /usr/bin/threads
 		@echo "Application installed"
 
 clean:
 		@echo "Cleaning source directory"
-		rm src/prog2
+		rm src/threads
 		@echo "Done"
