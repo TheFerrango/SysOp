@@ -19,7 +19,7 @@ rules_rsys:
 		@echo "Adesso restarto il sistema di log"
 		service rsyslog restart
 
-install: 
+install: compile rules_rsys
 		@echo "Entering directory src"
 		@echo "Moving files"
 		@cp src/prog2 /usr/bin/
